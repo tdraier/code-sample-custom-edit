@@ -16,3 +16,5 @@ repository.xml.generated
 
 node_modules
 yarn-error.log
+
+src/main/resource/javascript

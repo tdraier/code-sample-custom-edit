@@ -1,54 +1,59 @@
 import React from 'react';
-import {createStore, combineReducers} from 'redux';
-import {reducer as formReducer} from 'redux-form';
-import {Provider} from 'react-redux';
-import {CustomForm} from './CustomForm'
+import {CustomFormContainer} from './CustomForm/CustomFormContainer'
+import {ApolloProvider} from 'react-apollo';
+import {client} from '@jahia/apollo-dx';
 
 export class CustomEdit extends React.Component {
 
     constructor(props) {
         super(props);
         this.form = React.createRef();
+
+        this.ns = ['test'];
+        this.defaultNS = 'test';
+        this.namespaceResolvers = {}
+
     }
 
     onSave(node) {
-        let values = this.form.current.values;
-        console.log('1', values);
+        let values = this.form.current.getValues();
+        console.log('save', values);
 
-        node.setProperty('test', values.test, 1);
+        Object.keys(values.main).forEach(k => {
+            node.setProperty(k, values.main[k], 1);
+        });
 
-        let test1 = node.child('1', 'node-1');
-        test1.addMixin('jnt:customEditSubContent');
-        test1.setProperty('test', values.node1, 1);
-
-        let test2 = node.child('2', 'node-2');
-        test2.addMixin('jnt:customEditSubContent');
-        test2.setProperty('test', values.node2, 1);
+        Object.keys(values.children).forEach((c,i) => {
+            let childObject = values.children[c];
+            let {uuid, ...props} = childObject;
+            let child = node.child(uuid, c);
+            child.addMixin('jnt:customEditSubContent');
+            Object.keys(props).forEach(k => {
+                child.setProperty(k, childObject[k], 1);
+            });
+        });
     }
 
     onLanguageChange(data) {
-        console.log('1', data)
+        console.log('language change', data)
     }
 
     onValidate(node) {
-        console.log('1', node);
-        this.form.current.submit();
+        console.log('validate', node);
     }
 
     render() {
-        const rootReducer = combineReducers({
-            form: formReducer
-        });
-        const store = createStore(rootReducer);
-
-        let values = {
-            test: this.props.data.getProperty('test')
-        };
-
+        let {data} = this.props;
         return (
-            <Provider store={store}>
-                <CustomForm ref={this.form} initialValues={values} onSubmit={(da) => {console.log(da)}}/>
-            </Provider>
+            <React.Fragment>
+                <ApolloProvider client={client({
+                    contextPath: contextJsParameters.contextPath,
+                    useBatch: true,
+                    httpOptions: {batchMax: 50}
+                })}>
+                    <CustomFormContainer formRef={this.form} data={data}/>
+                </ApolloProvider>
+            </React.Fragment>
         );
     }
 };

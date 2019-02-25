@@ -2,8 +2,10 @@
 <jmix = 'http://www.jahia.org/jahia/mix/1.0'>
 
 [jnt:customEditSubContent]
- - test (string)
+ - content (string)
 
 [jnt:customEditContent] > jnt:content, jmix:editorialContent, jmix:structuredContent
- - test (string)
+ - title (string)
+ - lat (string)
+ - lng (string)
  + * (jnt:customEditSubContent)
